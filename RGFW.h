@@ -852,6 +852,9 @@ RGFWDEF RGFW_bool RGFW_isMouseReleased(RGFW_mouseButton button /*!< mouse button
 RGFWDEF void RGFW_getMouseScroll(float* x, float* y);
 /*! get the current vector value (of the frame) */
 RGFWDEF void RGFW_getMouseVector(float* x, float* y);
+/*! convert RGFW physical key code to mapped key code */
+RGFWDEF RGFW_key RGFW_keyToMapped(RGFW_key physical);
+
 /** @} */
 
 /*! Optional arguments for making a windows */
@@ -4416,6 +4419,21 @@ u8 RGFW_FUNC(RGFW_rgfwToKeyChar) (u32 key) {
     return (u8)sym;
 }
 
+RGFW_key RGFW_FUNC(RGFW_keyToMapped) (RGFW_key physical) {
+    u32 keycode = RGFW_rgfwToApiKey(physical);
+
+    Window root = DefaultRootWindow(_RGFW->display);
+    Window ret_root, ret_child;
+    int root_x, root_y, win_x, win_y;
+    unsigned int mask;
+    XQueryPointer(_RGFW->display, root, &ret_root, &ret_child, &root_x, &root_y, &win_x, &win_y, &mask);
+    KeySym sym = (KeySym)XkbKeycodeToKeysym(_RGFW->display, (KeyCode)keycode, 0, 0);
+
+    return (u8)sym;
+
+}
+
+
 RGFWDEF void RGFW_XHandleEvent(void);
 void RGFW_XHandleEvent(void) {
 	RGFW_LOAD_ATOM(XdndTypeList);
@@ -7140,6 +7158,11 @@ u8 RGFW_FUNC(RGFW_rgfwToKeyChar)(u32 key) {
     return (u8)key;
 }
 
+
+RGFW_key RGFW_FUNC(RGFW_keyToMapped) (RGFW_key physical) {
+	return physical;
+}
+
 void RGFW_FUNC(RGFW_pollEvents) (void) {
 	RGFW_resetPrevState();
 
@@ -8526,6 +8549,11 @@ u8 RGFW_rgfwToKeyChar(u32 rgfw_keycode) {
         return (u8)rgfw_keycode;
 
     return (u8)charBuffer[0];
+}
+
+
+RGFW_key RGFW_FUNC(RGFW_keyToMapped) (RGFW_key physical) {
+
 }
 
 void RGFW_pollEvents(void) {
@@ -10609,6 +10637,12 @@ u8 RGFW_rgfwToKeyChar(u32 rgfw_keycode) {
     return (u8)rgfw_keycode; /* TODO */
 }
 
+RGFW_key RGFW_FUNC(RGFW_keyToMapped) (RGFW_key physical) {
+
+}
+
+
+
 void RGFW_pollEvents(void) {
 	/*
 	 * TODO look to see if all these events can be replaced with callbacks
@@ -11858,6 +11892,10 @@ u8 RGFW_rgfwToKeyChar(u32 rgfw_keycode) {
     return (u8)rgfw_keycode; /* TODO */
 }
 
+RGFW_key RGFW_FUNC(RGFW_keyToMapped) (RGFW_key physical) {
+
+}
+
 void RGFW_pollEvents(void) { RGFW_resetPrevState(); }
 
 void RGFW_window_resize(RGFW_window* win, i32 w, i32 h) {
@@ -12227,6 +12265,7 @@ void RGFW_waitForEvent(i32 waitMS) { RGFW_UNUSED(waitMS); }
 typedef RGFW_window* (*RGFW_createWindowPlatform_ptr)(const char* name, RGFW_windowFlags flags, RGFW_window* win);
 typedef RGFW_bool (*RGFW_getMouse_ptr)(i32* x, i32* y);
 typedef u8 (*RGFW_rgfwToKeyChar_ptr)(u32 key);
+typedef RGFW_key(*RGFW_keyToMapped_ptr)(RGFW_key key);
 typedef void (*RGFW_pollEvents_ptr)(void);
 typedef void (*RGFW_window_move_ptr)(RGFW_window* win, i32 x, i32 y);
 typedef void (*RGFW_window_resize_ptr)(RGFW_window* win, i32 w, i32 h);
@@ -12295,7 +12334,8 @@ typedef struct RGFW_FunctionPointers {
     RGFW_createWindowPlatform_ptr createWindowPlatform;
     RGFW_getMouse_ptr getGlobalMouse;
     RGFW_rgfwToKeyChar_ptr rgfwToKeyChar;
-    RGFW_pollEvents_ptr pollEvents;
+	RGFW_keyToMapped_ptr keyToMapped;
+	RGFW_pollEvents_ptr pollEvents;
     RGFW_window_move_ptr window_move;
     RGFW_window_resize_ptr window_resize;
     RGFW_window_setAspectRatio_ptr window_setAspectRatio;
@@ -12357,6 +12397,7 @@ void RGFW_captureCursor(RGFW_window* win) { RGFW_api.captureCursor(win); }
 RGFW_window* RGFW_createWindowPlatform(const char* name, RGFW_windowFlags flags, RGFW_window* win) { RGFW_init(); return RGFW_api.createWindowPlatform(name, flags, win); }
 RGFW_bool RGFW_getGlobalMouse(i32* x, i32* y) { return RGFW_api.getGlobalMouse(x, y); }
 u8 RGFW_rgfwToKeyChar(u32 key) { return RGFW_api.rgfwToKeyChar(key); }
+RGFW_key RGFW_keyToMapped(RGFW_key physical) { return RGFW_api.keyToMapped(physical); }
 void RGFW_pollEvents(void) { RGFW_api.pollEvents(); }
 void RGFW_window_move(RGFW_window* win, i32 x, i32 y) { RGFW_api.window_move(win, x, y); }
 void RGFW_window_resize(RGFW_window* win, i32 w, i32 h) { RGFW_api.window_resize(win, w, h); }
