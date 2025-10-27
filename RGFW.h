@@ -4421,12 +4421,6 @@ u8 RGFW_FUNC(RGFW_rgfwToKeyChar) (u32 key) {
 
 RGFW_key RGFW_FUNC(RGFW_keyToMapped) (RGFW_key physical) {
     u32 keycode = RGFW_rgfwToApiKey(physical);
-
-    Window root = DefaultRootWindow(_RGFW->display);
-    Window ret_root, ret_child;
-    int root_x, root_y, win_x, win_y;
-    unsigned int mask;
-    XQueryPointer(_RGFW->display, root, &ret_root, &ret_child, &root_x, &root_y, &win_x, &win_y, &mask);
     KeySym sym = (KeySym)XkbKeycodeToKeysym(_RGFW->display, (KeyCode)keycode, 0, 0);
 
     return (u8)sym;
